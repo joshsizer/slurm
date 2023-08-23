@@ -13,18 +13,24 @@ provider "aws" {
   region  = "us-east-1"
 }
 
-resource "aws_instance" "slurm_control" {
+resource "aws_instance" "this" {
   ami           = "ami-08a52ddb321b32a8c"
   instance_type = "t3.micro"
-  subnet_id     = aws_subnet.slurm_subnet_us_east_1a.id
-  security_groups = ["${aws_security_group.slurm_ssh.id}"]
+  subnet_id     = aws_subnet.slurm_us_east_1a.id
+  security_groups = ["${aws_security_group.ssh.id}"]
+  key_name = aws_key_pair.slurm_controller_ssh.key_name
 
   tags = {
-    Name = "slurm-controller"
+    Name = "slurm_controller"
   }
 }
 
-resource "aws_vpc" "slurm_vpc" {
+resource "aws_key_pair" "slurm_controller_ssh" {
+  key_name = "slurm_controller_ssh"
+  public_key = "${var.slurm_controller_public_ssh_key}"
+}
+
+resource "aws_vpc" "this" {
   cidr_block       = "10.0.0.0/16"
   instance_tenancy = "default"
 
@@ -33,60 +39,59 @@ resource "aws_vpc" "slurm_vpc" {
   }
 }
 
-resource "aws_subnet" "slurm_subnet_us_east_1a" {
-  vpc_id            = aws_vpc.slurm_vpc.id
-  cidr_block        = "10.0.0.0/16"
+resource "aws_subnet" "slurm_us_east_1a" {
+  vpc_id            = aws_vpc.this.id
+  cidr_block        = aws_vpc.this.cidr_block
   availability_zone = "us-east-1a"
 
   tags = {
-    Name = "slurm_subnet_us_east_1a"
+    Name = "slurm_us_east_1a"
   }
 }
 
-resource "aws_internet_gateway" "slurm_internet_gateway" {
-  vpc_id = "${aws_vpc.slurm_vpc.id}"
+resource "aws_internet_gateway" "this" {
+  vpc_id = "${aws_vpc.this.id}"
   
   tags = {
-    Name = "slurm_internet_gateway"
+    Name = "slurm"
   }
 }
 
-resource "aws_route_table" "slurm_route_table" {
-  vpc_id = "${aws_vpc.slurm_vpc.id}"
+resource "aws_route_table" "this" {
+  vpc_id = "${aws_vpc.this.id}"
   
   route {
-    cidr_block = "${aws_vpc.slurm_vpc.cidr_block}"
+    cidr_block = "${aws_vpc.this.cidr_block}"
     gateway_id = "local"
   }
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.slurm_internet_gateway.id}"
+    gateway_id = "${aws_internet_gateway.this.id}"
   }
 
   tags = {
-    Name = "slurm_route_table"
+    Name = "slurm"
   }
 }
 
-resource "aws_main_route_table_association" "slurm_main_route_table_association" {
-  vpc_id         = aws_vpc.slurm_vpc.id
-  route_table_id = aws_route_table.slurm_route_table.id
+resource "aws_main_route_table_association" "this" {
+  vpc_id         = aws_vpc.this.id
+  route_table_id = aws_route_table.this.id
 }
 
-resource "aws_eip" "slurm_controller_eip" {
-  instance = "${aws_instance.slurm_control.id}"
+resource "aws_eip" "this" {
+  instance = "${aws_instance.this.id}"
   domain   = "vpc"
 
   tags = {
-    Name = "slurm_controller_eip"
+    Name = "slurm_controller"
   }
 }
 
-resource "aws_security_group" "slurm_ssh" {
-  name        = "slurm_ssh"
+resource "aws_security_group" "ssh" {
   description = "Allow SSH traffic"
-  vpc_id      = aws_vpc.slurm_vpc.id
+  vpc_id      = aws_vpc.this.id
 
   ingress {
     description      = "SSH from anywhere"
