@@ -46,7 +46,7 @@ resource "aws_subnet" "slurm_subnet_us_east_1a" {
 resource "aws_internet_gateway" "slurm_internet_gateway" {
   vpc_id = "${aws_vpc.slurm_vpc.id}"
   
-  tags {
+  tags = {
     Name = "slurm_internet_gateway"
   }
 }
