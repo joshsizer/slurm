@@ -55,6 +55,11 @@ resource "aws_route_table" "slurm_route_table" {
   vpc_id = "${aws_vpc.slurm_vpc.id}"
   
   route {
+    cidr_block = "${aws_vpc.slurm_vpc.cidr_block}"
+    gateway_id = "local"
+  }
+
+  route {
     cidr_block = "0.0.0.0/0"
     gateway_id = "${aws_internet_gateway.slurm_internet_gateway.id}"
   }
@@ -62,6 +67,11 @@ resource "aws_route_table" "slurm_route_table" {
   tags = {
     Name = "slurm_route_table"
   }
+}
+
+resource "aws_main_route_table_association" "slurm_main_route_table_association" {
+  vpc_id         = aws_vpc.slurm_vpc.id
+  route_table_id = aws_route_table.slurm_route_table.id
 }
 
 resource "aws_eip" "slurm_controller_eip" {
