@@ -59,7 +59,7 @@ resource "aws_route_table" "slurm_route_table" {
     gateway_id = "${aws_internet_gateway.slurm_internet_gateway.id}"
   }
 
-  tags {
+  tags = {
     Name = "slurm_route_table"
   }
 }
