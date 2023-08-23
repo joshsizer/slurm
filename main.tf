@@ -33,15 +33,6 @@ resource "aws_vpc" "slurm_vpc" {
   }
 }
 
-resource "aws_eip" "slurm_controller_eip" {
-  instance = "${aws_instance.slurm_control.id}"
-  domain   = "vpc"
-
-  tags = {
-    Name = "slurm_controller_eip"
-  }
-}
-
 resource "aws_subnet" "slurm_subnet_us_east_1a" {
   vpc_id            = aws_vpc.slurm_vpc.id
   cidr_block        = "10.0.0.0/16"
@@ -49,6 +40,23 @@ resource "aws_subnet" "slurm_subnet_us_east_1a" {
 
   tags = {
     Name = "slurm_subnet_us_east_1a"
+  }
+}
+
+resource "aws_internet_gateway" "slurm_internet_gateway" {
+  vpc_id = "${aws_vpc.slurm_vpc.id}"
+  
+  tags {
+    Name = "slurm_internet_gateway"
+  }
+}
+
+resource "aws_eip" "slurm_controller_eip" {
+  instance = "${aws_instance.slurm_control.id}"
+  domain   = "vpc"
+
+  tags = {
+    Name = "slurm_controller_eip"
   }
 }
 
