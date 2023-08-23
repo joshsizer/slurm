@@ -18,7 +18,7 @@ resource "aws_instance" "this" {
   instance_type = "t3.micro"
   subnet_id     = aws_subnet.slurm_us_east_1a.id
   security_groups = ["${aws_security_group.ssh.id}"]
-  key_name = aws_key_pair.slurm_controller_ssh.key_name
+  key_name = aws_key_pair.slurm_controller_ssh.tags.Name
 
   tags = {
     Name = "slurm_controller"
@@ -26,8 +26,11 @@ resource "aws_instance" "this" {
 }
 
 resource "aws_key_pair" "slurm_controller_ssh" {
-  key_name = "slurm_controller_ssh"
   public_key = "${var.slurm_controller_public_ssh_key}"
+
+  tags = {
+    Name = "slurm_controller_ssh"
+  }
 }
 
 resource "aws_vpc" "this" {
@@ -35,7 +38,7 @@ resource "aws_vpc" "this" {
   instance_tenancy = "default"
 
   tags = {
-    Name = "slurm_vpc"
+    Name = "slurm"
   }
 }
 
@@ -90,7 +93,6 @@ resource "aws_eip" "this" {
 }
 
 resource "aws_security_group" "ssh" {
-  description = "Allow SSH traffic"
   vpc_id      = aws_vpc.this.id
 
   ingress {
@@ -112,5 +114,6 @@ resource "aws_security_group" "ssh" {
 
   tags = {
     Name = "slurm_ssh"
+    Description = "Allow SSH traffic"
   }
 }
