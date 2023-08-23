@@ -51,6 +51,19 @@ resource "aws_internet_gateway" "slurm_internet_gateway" {
   }
 }
 
+resource "aws_route_table" "slurm_route_table" {
+  vpc_id = "${aws_vpc.slurm_vpc.id}"
+  
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = "${aws_internet_gateway.slurm_internet_gateway.id}"
+  }
+
+  tags {
+    Name = "slurm_route_table"
+  }
+}
+
 resource "aws_eip" "slurm_controller_eip" {
   instance = "${aws_instance.slurm_control.id}"
   domain   = "vpc"
