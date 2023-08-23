@@ -18,7 +18,7 @@ resource "aws_instance" "this" {
   instance_type = "t3.micro"
   subnet_id     = aws_subnet.slurm_us_east_1a.id
   security_groups = ["${aws_security_group.ssh.id}"]
-  key_name = aws_key_pair.slurm_controller_ssh.tags.Name
+  key_name = aws_key_pair.slurm_controller_ssh.id
 
   tags = {
     Name = "slurm_controller"
