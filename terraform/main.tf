@@ -25,6 +25,15 @@ resource "aws_instance" "this" {
   }
 }
 
+resource "aws_eip" "this" {
+  instance = "${aws_instance.this.id}"
+  domain   = "vpc"
+
+  tags = {
+    Name = "slurm_controller"
+  }
+}
+
 resource "aws_key_pair" "slurm_controller_ssh" {
   public_key = "${var.slurm_controller_public_ssh_key}"
 
@@ -81,15 +90,6 @@ resource "aws_route_table" "this" {
 resource "aws_main_route_table_association" "this" {
   vpc_id         = aws_vpc.this.id
   route_table_id = aws_route_table.this.id
-}
-
-resource "aws_eip" "this" {
-  instance = "${aws_instance.this.id}"
-  domain   = "vpc"
-
-  tags = {
-    Name = "slurm_controller"
-  }
 }
 
 resource "aws_security_group" "ssh" {
