@@ -8,9 +8,9 @@ packer {
 }
 
 source "amazon-ebs" "amazon_linux" {
-  ami_name      = "learn-packer-linux-aws"
-  instance_type = "t2.micro"
-  region        = "us-west-2"
+  ami_name      = "slurm-controller"
+  instance_type = "t3.micro"
+  region        = "us-east-1"
   source_ami_filter {
     filters = {
       name                = "al2023-ami-*-x86_64"
