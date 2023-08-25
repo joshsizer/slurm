@@ -24,7 +24,7 @@ source "amazon-ebs" "amazon_linux" {
 }
 
 build {
-  name    = "slurm-controller"
+  name = "slurm-controller"
   sources = [
     "source.amazon-ebs.amazon_linux"
   ]
