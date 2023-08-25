@@ -14,7 +14,7 @@ provider "aws" {
 }
 
 resource "aws_instance" "this" {
-  ami           = "ami-08a52ddb321b32a8c"
+  ami           = "ami-07614bbb83bd07553"
   instance_type = "t3.micro"
   subnet_id     = aws_subnet.slurm_us_east_1a.id
   security_groups = ["${aws_security_group.ssh.id}"]
