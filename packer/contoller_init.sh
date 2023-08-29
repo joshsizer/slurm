@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-sudo yum install -y bzip2 perl openssl-devel
+sudo yum install -y bzip2 perl openssl-devel dbus-devel
 
 # munge installation guide: https://github.com/dun/munge/wiki/Installation-Guide
 MUNGE_VERSION="0.5.15"
@@ -33,6 +33,7 @@ cd slurm-$SLURM_VERSION
 # Install slurm: https://slurm.schedmd.com/quickstart_admin.html#build_install
 ./configure --with-systemdsystemunitdir="/usr/local/lib/systemd/system/"
 sudo make install
+export LD_LIBRARY_PATH="/usr/local/lib"
 ldconfig -n /usr/local/lib
 mkdir -p /usr/local/etc
 cat << EOF | sudo tee -a /usr/local/etc/slurm.conf >/dev/null
@@ -40,14 +41,13 @@ cat << EOF | sudo tee -a /usr/local/etc/slurm.conf >/dev/null
 # Sample /etc/slurm.conf for mcr.llnl.gov
 #
 ClusterName=cluster
-SlurmctldHost=mcri(12.34.56.78)
-SlurmctldHost=mcrj(12.34.56.79)
+SlurmctldHost=ip-10-0-91-121.ec2.internal
 #
 AuthType=auth/munge
 Epilog=/usr/local/slurm/etc/epilog
 JobCompLoc=/var/tmp/jette/slurm.job.log
 JobCompType=jobcomp/filetxt
-PluginDir=/usr/local/slurm/lib/slurm
+PluginDir=/usr/local/lib/slurm
 Prolog=/usr/local/slurm/etc/prolog
 SchedulerType=sched/backfill
 SelectType=select/linear
@@ -63,18 +63,37 @@ TreeWidth=50
 #
 # Node Configurations
 #
-NodeName=DEFAULT CPUs=2 RealMemory=2000 TmpDisk=64000 State=UNKNOWN
-NodeName=mcr[0-1151] NodeAddr=emcr[0-1151]
+NodeName=DEFAULT CPUs=2 RealMemory=500 TmpDisk=250 SocketsPerBoard=1 ThreadsPerCore=2 State=UNKNOWN
+NodeName=ip-10-0-91-121.ec2.internal
 #
 # Partition Configurations
 #
 PartitionName=DEFAULT State=UP
-PartitionName=pdebug Nodes=mcr[0-191] MaxTime=30 MaxNodes=32 Default=YES
-PartitionName=pbatch Nodes=mcr[192-1151]
+PartitionName=pdebug Nodes=ip-10-0-91-121.ec2.internal MaxTime=30 MaxNodes=32 Default=YES
 EOF
 
-sudo mkdir -p /usr/local/slurm/lib/slurm /usr/local/slurm/etc/epilog
-sudo chown slurm:slurm /usr/local/slurm/lib/slurm
+sudo mkdir -p \
+        /usr/local/slurm/lib/slurm \
+        /usr/local/slurm/etc/epilog \
+        /usr/local/slurm/etc/prolog \
+        /var/spool/slurm.state \
+        /var/spool/slurmd.spool \
+        /var/tmp/jette/
+sudo chown slurm:slurm \
+        /usr/local/slurm/lib/slurm \
+        /usr/local/slurm/etc/epilog \
+        /usr/local/slurm/etc/prolog \
+        /var/spool/slurm.state \
+        /var/spool/slurmd.spool \
+        /var/tmp/jette/
+
+sudo chmod -R go+w /usr/local/slurm/etc/prolog/ /usr/local/slurm/etc/epilog/
+
+echo "LD_LIBRARY_PATH=/usr/local/lib" > /etc/default/slurmctld
+echo "LD_LIBRARY_PATH=/usr/local/lib" > /etc/default/slurmd
 
 sudo systemctl enable slurmctld.service
 sudo systemctl start slurmctld.service
+
+#sudo -u slurm LD_LIBRARY_PATH="/usr/local/lib" scontrol reconfigure
+#sudo -u slurm LD_LIBRARY_PATH=/usr/local/lib scontrol update nodename=ip-10-0-91-121.ec2.internal state=resume
